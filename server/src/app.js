@@ -6,9 +6,20 @@ import errorHandler from "./middleware/errorHandler.js";
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_URL
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST"],
     credentials: true
   })
@@ -23,10 +34,8 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Case routes
 app.use("/api/cases", caseRoutes);
 
-// Error handling middleware
 app.use(errorHandler);
 
 export default app;
